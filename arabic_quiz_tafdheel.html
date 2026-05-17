@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>لعبة أسلوب التفضيل</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#C9920A;--gold-light:#F0C040;--dark:#0D1B2A;--dark2:#111F30;
+  --dark3:#162336;--dark4:#1A2E44;--dark5:#2A4060;
+  --text:#F0F4FF;--muted:#8AAAC8;
+}
+html,body{height:100%;background:var(--dark);font-family:'Tajawal',sans-serif;direction:rtl;}
+body{display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:0;}
+
+.game{width:100%;max-width:520px;min-height:100vh;background:var(--dark);display:flex;flex-direction:column;margin:0 auto;}
+.screen{display:none;flex-direction:column;flex:1;}
+.screen.active{display:flex;}
+
+/* ══════════ START ══════════ */
+#startScreen{align-items:center;justify-content:center;padding:40px 28px;gap:16px;}
+.start-glow{width:110px;height:110px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:58px;border:5px solid var(--gold-light);box-shadow:0 0 40px rgba(201,146,10,0.35);}
+.start-title{font-size:26px;font-weight:900;color:var(--gold-light);text-align:center;}
+.start-sub{font-size:14px;color:var(--muted);text-align:center;line-height:1.7;}
+.divider{width:200px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.stars-row{font-size:24px;letter-spacing:6px;}
+.name-wrap{width:100%;display:flex;flex-direction:column;gap:8px;}
+.name-wrap label{font-size:14px;font-weight:700;color:var(--gold-light);}
+.name-input{width:100%;padding:14px 16px;font-family:'Tajawal',sans-serif;font-size:17px;border:2px solid var(--dark5);border-radius:14px;outline:none;color:var(--text);background:var(--dark3);text-align:right;}
+.name-input:focus{border-color:var(--gold);}
+.name-input::placeholder{color:#4A6A8C;}
+.btn-start{background:var(--gold);color:var(--dark);border:none;border-radius:16px;padding:16px 0;font-family:'Tajawal',sans-serif;font-size:18px;font-weight:900;cursor:pointer;width:100%;letter-spacing:1px;box-shadow:0 4px 20px rgba(201,146,10,0.3);}
+.btn-start:hover{background:var(--gold-light);}
+.btn-start:active{transform:scale(0.98);}
+
+/* ══════════ QUIZ ══════════ */
+#quizScreen{background:var(--dark);}
+.quiz-header{background:var(--dark2);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--gold);flex-shrink:0;}
+.quiz-logo{display:flex;align-items:center;gap:10px;}
+.quiz-logo-icon{width:38px;height:38px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.quiz-logo-text{color:var(--gold-light);font-size:16px;font-weight:900;}
+.q-counter{background:var(--dark4);border:1.5px solid var(--gold);border-radius:10px;padding:6px 16px;color:var(--gold-light);font-size:15px;font-weight:900;}
+
+.quiz-body{padding:20px;flex:1;display:flex;flex-direction:column;gap:16px;}
+
+.progress-row{display:flex;gap:8px;}
+.prog-dot{flex:1;height:7px;border-radius:4px;background:var(--dark4);transition:background .3s;}
+.prog-dot.done{background:var(--gold);}
+.prog-dot.active{background:var(--gold-light);}
+
+.q-card{background:var(--dark2);border-radius:18px;padding:22px;border:2px solid var(--dark5);position:relative;overflow:hidden;}
+.q-card::before{content:'؟';position:absolute;left:-8px;top:-12px;font-size:90px;font-weight:900;color:rgba(201,146,10,0.06);line-height:1;pointer-events:none;}
+.q-num{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px;letter-spacing:1px;}
+.q-text{font-size:19px;font-weight:900;color:var(--text);line-height:1.7;}
+.q-blank{color:var(--gold-light);border-bottom:2px solid var(--gold-light);padding:0 6px;display:inline-block;min-width:70px;text-align:center;}
+
+.choices{display:flex;flex-direction:column;gap:10px;}
+.choice-btn{background:var(--dark2);border:2px solid var(--dark5);border-radius:14px;padding:14px 18px;font-family:'Tajawal',sans-serif;font-size:17px;font-weight:700;color:#C8D8EE;cursor:pointer;text-align:right;display:flex;align-items:center;gap:12px;transition:all .18s;width:100%;}
+.choice-btn:hover{border-color:var(--gold);color:var(--gold-light);background:var(--dark3);}
+.choice-btn.selected{border-color:var(--gold-light);color:var(--gold-light);background:var(--dark4);}
+.choice-letter{width:32px;height:32px;border-radius:50%;background:var(--dark4);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:var(--muted);flex-shrink:0;border:1.5px solid var(--dark5);}
+.choice-btn.selected .choice-letter{background:var(--gold);color:var(--dark);border-color:var(--gold);}
+
+.btn-next{background:var(--dark4);color:#6A8AAC;border:2px solid var(--dark5);border-radius:14px;padding:15px 0;font-family:'Tajawal',sans-serif;font-size:17px;font-weight:900;cursor:default;width:100%;transition:all .2s;}
+.btn-next.ready{background:var(--gold);color:var(--dark);border-color:var(--gold);cursor:pointer;box-shadow:0 4px 18px rgba(201,146,10,0.3);}
+.btn-next.ready:hover{background:var(--gold-light);}
+.btn-next.ready:active{transform:scale(0.98);}
+
+/* ══════════ CERT SCREEN ══════════ */
+#certScreen{background:var(--dark);align-items:center;padding:20px;gap:14px;justify-content:flex-start;}
+
+/* The downloadable certificate */
+#certBox{width:100%;max-width:480px;background:var(--dark);border-radius:0;padding:3px;border:3px solid var(--gold);position:relative;}
+#certBox::before{content:'';position:absolute;inset:9px;border:1.5px solid rgba(201,146,10,0.3);border-radius:16px;pointer-events:none;z-index:0;}
+.cert-inner{background:var(--dark2);border-radius:18px;padding:28px 24px;text-align:center;position:relative;z-index:1;}
+
+.cert-deco{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:14px;}
+.cert-line{flex:1;height:1px;background:rgba(201,146,10,0.4);}
+.cert-diamond{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);}
+
+.cert-trophy-big{font-size:54px;margin-bottom:8px;line-height:1;}
+.cert-type{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:3px;margin-bottom:4px;}
+.cert-heading{font-size:21px;font-weight:900;color:var(--gold-light);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(201,146,10,0.25);}
+.cert-presented{font-size:13px;color:var(--muted);margin-bottom:6px;}
+.cert-name{font-size:28px;font-weight:900;color:var(--gold-light);margin-bottom:18px;}
+
+.cert-score-row{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:16px;}
+.score-circle{width:74px;height:74px;border-radius:50%;background:var(--dark);border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.score-num{font-size:28px;font-weight:900;color:var(--gold-light);line-height:1;}
+.score-denom{font-size:12px;color:var(--muted);}
+.score-label .big{font-size:17px;font-weight:900;color:var(--gold-light);}
+.score-label .small{font-size:13px;color:var(--muted);margin-top:3px;}
+
+.cert-stars-big{font-size:28px;margin-bottom:12px;letter-spacing:5px;}
+.cert-msg-box{background:var(--dark);border:1px solid rgba(201,146,10,0.22);border-radius:12px;padding:12px 16px;margin-bottom:16px;}
+.cert-msg-text{font-size:13px;color:#A0C0DC;line-height:1.7;}
+
+.cert-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(201,146,10,0.2);padding-top:14px;}
+.cert-teacher-label{font-size:12px;color:#6A8AAC;}
+.cert-teacher-name{font-size:15px;font-weight:900;color:var(--gold-light);}
+.cert-seal{width:46px;height:46px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px;}
+
+/* ══ DOWNLOAD BUTTON ══ */
+.btn-dl-wrap{width:100%;max-width:480px;display:flex;flex-direction:column;gap:10px;}
+.btn-dl{background:var(--gold);color:var(--dark);border:none;border-radius:16px;padding:15px 0;font-family:'Tajawal',sans-serif;font-size:17px;font-weight:900;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 20px rgba(201,146,10,0.35);}
+.btn-dl:hover{background:var(--gold-light);}
+.btn-dl:active{transform:scale(0.98);}
+.btn-dl-icon{font-size:22px;}
+.btn-dl-texts{display:flex;flex-direction:column;align-items:flex-start;}
+.btn-dl-main{font-size:17px;font-weight:900;line-height:1.2;}
+.btn-dl-sub{font-size:11px;font-weight:400;opacity:.75;direction:ltr;}
+.btn-retry{background:transparent;color:var(--muted);border:2px solid var(--dark5);border-radius:14px;padding:13px 0;font-family:'Tajawal',sans-serif;font-size:16px;font-weight:900;cursor:pointer;width:100%;}
+.btn-retry:hover{border-color:var(--gold);color:var(--gold-light);}
+
+/* loading overlay */
+.dl-loading{display:none;position:fixed;inset:0;background:rgba(13,27,42,0.85);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.dl-loading.show{display:flex;}
+.dl-spinner{width:48px;height:48px;border:4px solid var(--dark5);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+.dl-loading-text{color:var(--gold-light);font-size:16px;font-weight:700;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ══ RESPONSIVE ══ */
+@media(min-width:600px){
+  body{padding:20px 16px;}
+  .game{border-radius:24px;overflow:hidden;min-height:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  #certScreen{padding:28px;}
+}
+@media(max-width:380px){
+  .start-title{font-size:22px;}
+  .q-text{font-size:16px;}
+  .choice-btn{font-size:15px;padding:12px 14px;}
+  .cert-name{font-size:22px;}
+  .btn-dl-main{font-size:15px;}
+}
+</style>
+</head>
+<body>
+<div class="game">
+
+<!-- ══ START ══ -->
+<div id="startScreen" class="screen active">
+  <div class="start-glow">🎯</div>
+  <div class="stars-row">⭐⭐⭐⭐</div>
+  <div class="start-title">اختر الإجابة الصحيحة</div>
+  <div class="start-sub">اختبر معلوماتك في أسلوب التفضيل<br>٤ أسئلة تنتظرك — هل أنت مستعد؟</div>
+  <div class="divider"></div>
+  <div class="name-wrap">
+    <label>✏️ اكتب اسمك أولاً:</label>
+    <input class="name-input" id="nameInput" type="text" placeholder="اسمك هنا..." autocomplete="name">
+  </div>
+  <button class="btn-start" onclick="startGame()">🚀 ابدأ اللعبة</button>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="quizScreen" class="screen">
+  <div class="quiz-header">
+    <div class="quiz-logo">
+      <div class="quiz-logo-icon">🎓</div>
+      <div class="quiz-logo-text">أسلوب التفضيل</div>
+    </div>
+    <div class="q-counter" id="qCounter">١ / ٤</div>
+  </div>
+  <div class="quiz-body">
+    <div class="progress-row">
+      <div class="prog-dot active" id="pd0"></div>
+      <div class="prog-dot" id="pd1"></div>
+      <div class="prog-dot" id="pd2"></div>
+      <div class="prog-dot" id="pd3"></div>
+    </div>
+    <div class="q-card">
+      <div class="q-num" id="qNum">السؤال ١</div>
+      <div class="q-text" id="qText"></div>
+    </div>
+    <div class="choices" id="choicesWrap"></div>
+    <div>
+      <button class="btn-next" id="btnNext" onclick="nextQ()">اختر إجابة أولاً</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CERTIFICATE ══ -->
+<div id="certScreen" class="screen">
+
+  <div id="certBox">
+    <div class="cert-inner">
+      <div class="cert-deco">
+        <div class="cert-line"></div>
+        <div class="cert-diamond"></div><div class="cert-diamond"></div><div class="cert-diamond"></div>
+        <div class="cert-line"></div>
+      </div>
+      <div class="cert-trophy-big" id="certTrophy">🏆</div>
+      <div class="cert-type">CERTIFICATE OF ACHIEVEMENT</div>
+      <div class="cert-heading">شهادة تقدير — أسلوب التفضيل</div>
+      <div class="cert-presented">تُمنح هذه الشهادة للطالب المتميز</div>
+      <div class="cert-name" id="certName"></div>
+      <div class="cert-score-row">
+        <div class="score-circle">
+          <div class="score-num" id="certScoreNum"></div>
+          <div class="score-denom">من ٤</div>
+        </div>
+        <div class="score-label">
+          <div class="big" id="certGrade"></div>
+          <div class="small" id="certPercent"></div>
+        </div>
+      </div>
+      <div class="cert-stars-big" id="certStars"></div>
+      <div class="cert-msg-box">
+        <div class="cert-msg-text" id="certMsg"></div>
+      </div>
+      <div class="cert-footer">
+        <div>
+          <div class="cert-teacher-label">إشراف المعلم</div>
+          <div class="cert-teacher-name">محمود</div>
+        </div>
+        <div class="cert-seal" id="certSeal">🎖️</div>
+      </div>
+      <div class="cert-deco" style="margin-top:14px;margin-bottom:0;">
+        <div class="cert-line"></div>
+        <div class="cert-diamond"></div><div class="cert-diamond"></div><div class="cert-diamond"></div>
+        <div class="cert-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-dl-wrap">
+    <button class="btn-dl" id="btnDownload" onclick="downloadCert()">
+      <span class="btn-dl-icon">⬇️</span>
+      <div class="btn-dl-texts">
+        <span class="btn-dl-main">نزّل شهادتك</span>
+        <span class="btn-dl-sub">Download Certificate</span>
+      </div>
+    </button>
+    <button class="btn-retry" onclick="restart()">🔄 العب مجدداً</button>
+  </div>
+
+</div>
+</div>
+
+<!-- Loading overlay -->
+<div class="dl-loading" id="dlLoading">
+  <div class="dl-spinner"></div>
+  <div class="dl-loading-text">جارٍ تحضير شهادتك...</div>
+</div>
+
+<script>
+const AR=['٠','١','٢','٣','٤'];
+const LTR=['أ','ب','ج'];
+const questions=[
+  {text:'كرة الماء _______ مِن كرة البولينج.',choices:['خفيفة','أثقل','أخف'],answer:2},
+  {text:'أنا أفضل رونالدوا _______ مِن ميسي.',choices:['أفضل','أكثر','كثيراً'],answer:0},
+  {text:'الحديقة _______ مِن الشارع.',choices:['جميلة','كبيرة','أجمل'],answer:2},
+  {text:'برج خليفة _______ مِن برج العرب.',choices:['أقصر','طويل','أطول'],answer:2}
+];
+
+let cur=0,score=0,sel=null,playerName='';
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame(){
+  playerName=document.getElementById('nameInput').value.trim();
+  if(!playerName){
+    document.getElementById('nameInput').style.borderColor='#C9920A';
+    document.getElementById('nameInput').focus();
+    return;
+  }
+  cur=0;score=0;sel=null;
+  loadQ();
+  show('quizScreen');
+}
+
+function loadQ(){
+  const q=questions[cur];
+  document.getElementById('qCounter').textContent=AR[cur+1]+' / '+AR[questions.length];
+  document.getElementById('qNum').textContent='السؤال '+AR[cur+1];
+  document.getElementById('qText').innerHTML=q.text.replace('_______','<span class="q-blank">_______</span>');
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(i<cur)d.className='prog-dot done';
+    else if(i===cur)d.className='prog-dot active';
+    else d.className='prog-dot';
+  }
+  const wrap=document.getElementById('choicesWrap');
+  wrap.innerHTML='';
+  q.choices.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.innerHTML='<div class="choice-letter">'+LTR[i]+'</div>'+c;
+    btn.onclick=()=>pick(i,btn);
+    wrap.appendChild(btn);
+  });
+  sel=null;
+  const nb=document.getElementById('btnNext');
+  nb.classList.remove('ready');
+  nb.textContent='اختر إجابة أولاً';
+}
+
+function pick(i,btn){
+  if(sel!==null)return;
+  sel=i;
+  document.querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const nb=document.getElementById('btnNext');
+  nb.classList.add('ready');
+  nb.textContent=cur===questions.length-1?'عرض النتيجة ✓':'التالي ←';
+}
+
+function nextQ(){
+  if(sel===null)return;
+  if(sel===questions[cur].answer)score++;
+  cur++;
+  if(cur<questions.length){loadQ();}
+  else{showCert();}
+}
+
+function showCert(){
+  document.getElementById('certName').textContent=playerName;
+  document.getElementById('certScoreNum').textContent=AR[score];
+  const pct=Math.round((score/4)*100);
+  document.getElementById('certPercent').textContent='النسبة: '+pct+'%';
+  let trophy,stars,grade,msg;
+  if(score===4){
+    trophy='🏆';stars='⭐⭐⭐⭐';grade='ممتاز';
+    msg='رائع! أجبت على جميع الأسئلة بشكل صحيح. أنت نجم الفصل في أسلوب التفضيل، واصل تألقك!';
+  } else if(score===3){
+    trophy='🥇';stars='⭐⭐⭐';grade='جيد جداً';
+    msg='أحسنت! نتيجة رائعة تدل على فهم ممتاز. قريباً ستصل إلى الكمال!';
+  } else if(score===2){
+    trophy='🥈';stars='⭐⭐';grade='جيد';
+    msg='جيد! لديك قاعدة جيدة. راجع الأسئلة التي أخطأت فيها وستتحسن أكثر.';
+  } else {
+    trophy='📚';stars='⭐';grade='يحتاج مراجعة';
+    msg='لا تيأس! كل بداية تحتاج مثابرة. راجع درس أسلوب التفضيل وحاول مجدداً.';
+  }
+  document.getElementById('certTrophy').textContent=trophy;
+  document.getElementById('certStars').textContent=stars;
+  document.getElementById('certGrade').textContent=grade;
+  document.getElementById('certMsg').textContent=msg;
+  document.getElementById('certSeal').textContent=score===4?'🎖️':'✅';
+  show('certScreen');
+}
+
+function downloadCert(){
+  const loading=document.getElementById('dlLoading');
+  loading.classList.add('show');
+  const el=document.getElementById('certBox');
+  const scale=window.devicePixelRatio>1?2:2;
+  html2canvas(el,{
+    scale:scale,
+    useCORS:true,
+    backgroundColor:'#0D1B2A',
+    logging:false,
+    allowTaint:true
+  }).then(canvas=>{
+    loading.classList.remove('show');
+    const link=document.createElement('a');
+    const safeName=playerName.replace(/[^a-zA-Z\u0600-\u06FF\s]/g,'').trim()||'student';
+    link.download='certificate_'+safeName+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+  }).catch(()=>{
+    loading.classList.remove('show');
+    alert('حدث خطأ أثناء التحميل. حاول مجدداً.');
+  });
+}
+
+function restart(){
+  document.getElementById('nameInput').value='';
+  document.getElementById('nameInput').style.borderColor='';
+  cur=0;score=0;sel=null;
+  show('startScreen');
+}
+</script>
+</body>
+</html>
